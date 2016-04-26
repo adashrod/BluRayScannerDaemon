@@ -1,0 +1,8 @@
+/.idea
+/sample_1_demux
+/target
+/lib
+/*.iml
+/build
+/ivy
+/todo.txt

@@ -1,0 +1,5 @@
+eac3toExecutable=c:\\program files (x86)\\eac3to\\eac3to.exe
+dirToScan=
+languages=English,Spanish,Undetermined
+sleepTimeMinutes=360
+maxRetries=4
