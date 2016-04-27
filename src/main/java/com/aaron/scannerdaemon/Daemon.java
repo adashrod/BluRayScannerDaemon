@@ -34,6 +34,7 @@ public class Daemon {
     private final Collection<String> languages = new HashSet<>();
     private final String scanRecordName = "scanRecord.txt";
     private ScanRecord scanRecord;
+    private final File scanRecordFile = new File(dirToScan.getPath() + File.separator + scanRecordName);
     private long sleepTimeMs;
     private int maxRetries;
 
@@ -65,7 +66,6 @@ public class Daemon {
     }
 
     public void start() {
-        final File scanRecordFile = new File(dirToScan.getPath() + File.separator + scanRecordName);
         logger.info("starting daemon");
         while (true) {
             final File[] files = dirToScan.listFiles();
@@ -74,13 +74,13 @@ public class Daemon {
 
                 for (final File file: files) {
                     // skip scanning the scan record file and any failed BD dir or failed/succeeded mkv file
-                    if (file.equals(scanRecordFile) || isExempt(file, null)) { continue; }
+                    if (isExemptFile(file) || isExemptFromScan(file, null)) { continue; }
 
                     if (file.isDirectory()) {
                         final Set<Integer> titleNumbers = scanBluRayDir(file);
                         if (titleNumbers == null) { continue; }
                         for (final int titleNumber: titleNumbers) {
-                            if (isExempt(file, titleNumber)) { continue; }
+                            if (isExemptFromScan(file, titleNumber)) { continue; }
                             scannedAtLeastOneFile = demuxTitle(file, titleNumber);
                         }
                     } else {
@@ -228,12 +228,24 @@ public class Daemon {
     }
 
     /**
+     * Tests if the file is one that shouldn't be scanned at all, such as the scan record file or a scan log from the
+     * demuxer
+     * @param file the file to possibly be scanned
+     * @return true if file shouldn't be scanned
+     */
+    private boolean isExemptFile(final File file) {
+        return file.equals(scanRecordFile) || file.getName().endsWith(" - Log.txt");
+    }
+
+    /**
+     * Returns true for files/dirs/titles that are exempt from scanning because they've already been scanned or have
+     * failed too many times.
      * @param file        the file to possibly be scanned
      * @param titleNumber the title number if checking a BD title, null otherwise
      * @return true if the file should not be scanned: this happens if the file has been successfully scanned or if it
      * has failed to be scanned the max number of times
      */
-    private boolean isExempt(final File file, final Integer titleNumber) {
+    private boolean isExemptFromScan(final File file, final Integer titleNumber) {
         return scanRecord.containsSuccess(file.getName(), titleNumber) || scanRecord.containsAbandoned(file.getName(), titleNumber);
     }
 
