@@ -34,7 +34,7 @@ public class Daemon {
     private final Collection<String> languages = new HashSet<>();
     private final String scanRecordName = "scanRecord.txt";
     private ScanRecord scanRecord;
-    private final File scanRecordFile = new File(dirToScan.getPath() + File.separator + scanRecordName);
+    private File scanRecordFile;
     private long sleepTimeMs;
     private int maxRetries;
 
@@ -70,6 +70,12 @@ public class Daemon {
         while (true) {
             final File[] files = dirToScan.listFiles();
             if (files != null) {
+                try {
+                    scanRecord.reload();
+                } catch (final IOException ioe) {
+                    logger.error("Error reloading scan record", ioe);
+                    break;
+                }
                 boolean scannedAtLeastOneFile = false;
 
                 for (final File file: files) {
@@ -88,8 +94,10 @@ public class Daemon {
                     }
                 }
 
-                if (scannedAtLeastOneFile) { logger.info("finished scanning; sleeping"); }
-                scanRecord.writeToFile();
+                if (scannedAtLeastOneFile) {
+                    scanRecord.writeToFile();
+                    logger.info("finished scanning; sleeping");
+                }
 
                 try {
                     Thread.sleep(sleepTimeMs);
@@ -128,8 +136,7 @@ public class Daemon {
         check.accept("maxRetries");
         maxRetries = Integer.parseInt(maxRetriesProp);
 
-        final File scanRecordFile = new File(dirToScan.getPath() + File.separator + scanRecordName);
-        scanRecordFile.createNewFile();
+        scanRecordFile = new File(dirToScan.getPath() + File.separator + scanRecordName);
         scanRecord = new ScanRecord(scanRecordFile, maxRetries);
 
 

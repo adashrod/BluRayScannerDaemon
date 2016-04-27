@@ -38,6 +38,12 @@ public class ScanRecord {
     public ScanRecord(final File file, final int maxRetries) throws IOException {
         this.file = file;
         this.maxRetries = maxRetries;
+        reload();
+    }
+
+    public void reload() throws IOException {
+        file.createNewFile();
+        logs.clear();
         final BufferedReader bufferedReader;
         try (FileReader fileReader = new FileReader(file)) {
             bufferedReader = new BufferedReader(fileReader);
