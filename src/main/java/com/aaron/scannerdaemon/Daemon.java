@@ -76,6 +76,7 @@ public class Daemon {
                     logger.error("Error reloading scan record", ioe);
                     break;
                 }
+                // only ends up staying false if all files/titles being scanned are exempt
                 boolean scannedAtLeastOneFile = false;
 
                 for (final File file: files) {
@@ -84,13 +85,18 @@ public class Daemon {
 
                     if (file.isDirectory()) {
                         final Set<Integer> titleNumbers = scanBluRayDir(file);
-                        if (titleNumbers == null) { continue; }
+                        if (titleNumbers == null) {
+                            scannedAtLeastOneFile = true;
+                            continue;
+                        }
                         for (final int titleNumber: titleNumbers) {
                             if (isExemptFromScan(file, titleNumber)) { continue; }
-                            scannedAtLeastOneFile = demuxTitle(file, titleNumber);
+                            demuxTitle(file, titleNumber);
+                            scannedAtLeastOneFile = true;
                         }
                     } else {
-                        scannedAtLeastOneFile = demuxFile(file);
+                        demuxFile(file);
+                        scannedAtLeastOneFile = true;
                     }
                 }
 
@@ -178,15 +184,14 @@ public class Daemon {
      * Demuxes a specific title on a BD directory. Returns false if anything went wrong.
      * @param bluRayDir   the directory containing the BD
      * @param titleNumber which title to demux
-     * @return success
      */
-    private boolean demuxTitle(final File bluRayDir, final int titleNumber) {
+    private void demuxTitle(final File bluRayDir, final int titleNumber) {
         try {
             final Collection<String> generatedFilenames =
                 fileScanner.demuxBluRayTitleByLanguages(bluRayDir, titleNumber, languages);
             scanRecord.addSuccess(bluRayDir.getName(), titleNumber);
             generatedFilenames.forEach(scanRecord::addSuccess);
-            return true;
+            return;
         } catch (final CorruptBluRayStructureException cbse) {
             logger.error(String.format("was able to scan %s dir, but unable to scan title %d: %s",
                 bluRayDir.getName(), titleNumber, cbse.getDemuxerOutput()));
@@ -194,6 +199,7 @@ public class Daemon {
             // shouldn't happen unless there's a bug in MkvScannerDemuxer
             logger.error(String.format("possible bug: demuxer attempted a bad format conversion or something else went wrong. arguments=%s\noutput=%s", fce.getArguments(), fce.getDemuxerOutput()));
         } catch (final DemuxerException de) {
+            // in scanner/demuxer, arguments looks like "ANCHORMAN1)" no whitespace
             logger.error(String.format("failed to demux BD title, arguments=%s\noutput=%s", de.getArguments(), de.getDemuxerOutput()));
         } catch (final IOException ioe) {
             logger.error(String.format("failed to demux BD title, dir=%s, title=%d: IOException: %s", bluRayDir.getName(), titleNumber, ioe.getMessage()));
@@ -202,20 +208,18 @@ public class Daemon {
         if (scanRecord.containsAbandoned(bluRayDir.getName(), titleNumber)) {
             logger.error(String.format("Failed to demux %s title %d the max number of times", bluRayDir.getName(), titleNumber));
         }
-        return false;
     }
 
     /**
      * Demuxes a file, such as an MKV. Returns false if anything went wrong.
      * @param containerFile the file to demux
-     * @return success
      */
-    private boolean demuxFile(final File containerFile) {
+    private void demuxFile(final File containerFile) {
         try {
             final Collection<String> generatedFilenames = fileScanner.demuxFileByLanguages(containerFile, languages);
             scanRecord.addSuccess(containerFile.getName());
             generatedFilenames.forEach(scanRecord::addSuccess);
-            return true;
+            return;
         } catch (final UnreadableFileException ufe) {
             logger.warn(String.format("failed to scan %s as video container file\n\t%s", containerFile.getName(), ufe.getDemuxerOutput()));
         } catch (final FormatConversionException fce) {
@@ -231,7 +235,6 @@ public class Daemon {
         if (scanRecord.containsAbandoned(containerFile.getName(), null)) {
             logger.error(String.format("Failed to demux %s the max number of times", containerFile.getName()));
         }
-        return false;
     }
 
     /**
