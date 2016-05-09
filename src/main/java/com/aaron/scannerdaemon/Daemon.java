@@ -199,7 +199,6 @@ public class Daemon {
             // shouldn't happen unless there's a bug in MkvScannerDemuxer
             logger.error(String.format("possible bug: demuxer attempted a bad format conversion or something else went wrong. arguments=%s\noutput=%s", fce.getArguments(), fce.getDemuxerOutput()));
         } catch (final DemuxerException de) {
-            // in scanner/demuxer, arguments looks like "ANCHORMAN1)" no whitespace
             logger.error(String.format("failed to demux BD title, arguments=%s\noutput=%s", de.getArguments(), de.getDemuxerOutput()));
         } catch (final IOException ioe) {
             logger.error(String.format("failed to demux BD title, dir=%s, title=%d: IOException: %s", bluRayDir.getName(), titleNumber, ioe.getMessage()));
