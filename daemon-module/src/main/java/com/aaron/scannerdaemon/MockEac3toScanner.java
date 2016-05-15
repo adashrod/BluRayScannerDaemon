@@ -64,7 +64,4 @@ public class MockEac3toScanner implements FileScanner {
         generatedFilenames.add(file.getName() + "_subtitle");
         return generatedFilenames;
     }
-
-    @Override
-    public void abort() {}
 }

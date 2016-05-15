@@ -1,9 +1,9 @@
 /.idea
-/sample_1_demux
+/daemon-module/sample_1_demux
 /target
-/lib
+lib
 /*.iml
-/build
-/ivy
+build
+ivy
 /todo.txt
 /out

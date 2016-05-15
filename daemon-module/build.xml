@@ -10,7 +10,7 @@
     <property name="resources.main.dir"        value="src/main/resources"/>
     <property name="lib.dir"                   value="lib"/>
     <property name="build.main.dir"            value="build"/>
-    <property name="target.dir"                value="target"/>
+    <property name="target.dir"                value="../target"/>
     <property name="jar.file"                  value="DemuxerDaemon.jar"/>
 
     <path id="classpath.main">
