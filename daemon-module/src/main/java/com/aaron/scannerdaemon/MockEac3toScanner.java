@@ -46,7 +46,6 @@ public class MockEac3toScanner implements FileScanner {
     @Override
     public Collection<String> demuxBluRayTitleByLanguages(final File file, final int i, final Collection<String> collection) throws DemuxerException, IOException {
         final Collection<String> generatedFilenames = new HashSet<>();
-        generatedFilenames.add(file.getName() + "_ti" + i + "_tr1_Undetermined - Log.txt");
         generatedFilenames.add(file.getName() + "_ti" + i + "_tr1_Undetermined.txt");
         generatedFilenames.add(file.getName() + "_ti" + i + "_tr2_Undetermined.mkv");
         generatedFilenames.add(file.getName() + "_ti" + i + "_tr3_English.dts");
