@@ -2,7 +2,7 @@
 /daemon-module/sample_1_demux
 /target
 lib
-/*.iml
+*.iml
 build
 ivy
 /todo.txt

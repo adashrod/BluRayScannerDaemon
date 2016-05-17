@@ -18,9 +18,11 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * A daemon that runs until killed, periodically scanning the contents of a directory and attempts to demux them into
@@ -37,6 +39,8 @@ public class Daemon {
     private File scanRecordFile;
     private long sleepTimeMs;
     private int maxRetries;
+    private PluginApi pluginApi;
+    private PluginManager pluginManager;
 
     public Daemon() {
         try {
@@ -67,7 +71,18 @@ public class Daemon {
 
     public void start() {
         logger.info("starting daemon");
+        final File pluginsDir = new File("./plugins");
         while (true) {
+            final File[] jars = pluginsDir.listFiles((final File dir, final String name) -> { return name.endsWith(".jar"); });
+            if (jars != null) {
+                try {
+                    final Map<String, Throwable> errors = pluginManager.addPluginsFromJars(jars);
+                    if (!errors.isEmpty()) { logger.error("Encountered the following error(s) while loading plugins:"); }
+                    errors.forEach((final String className, final Throwable t) -> {
+                        logger.warn(String.format("class: %s, ex: %s", className, t));
+                    });
+                } catch (final IOException e) { logger.error(String.format("Failed to load plugin jar"), e); }
+            }
             final File[] files = dirToScan.listFiles();
             if (files != null) {
                 try {
@@ -83,6 +98,7 @@ public class Daemon {
                     // skip scanning the scan record file and any failed BD dir or failed/succeeded mkv file
                     if (isExemptFile(file) || isExemptFromScan(file, null)) { continue; }
 
+                    final Collection<File> generatedFiles = new HashSet<>();
                     if (file.isDirectory()) {
                         final Set<Integer> titleNumbers = scanBluRayDir(file);
                         if (titleNumbers == null) {
@@ -91,12 +107,18 @@ public class Daemon {
                         }
                         for (final int titleNumber: titleNumbers) {
                             if (isExemptFromScan(file, titleNumber)) { continue; }
-                            demuxTitle(file, titleNumber);
+                            generatedFiles.addAll(demuxTitle(file, titleNumber));
                             scannedAtLeastOneFile = true;
                         }
+
                     } else {
-                        demuxFile(file);
+                        generatedFiles.addAll(demuxFile(file));
                         scannedAtLeastOneFile = true;
+                    }
+                    if (!generatedFiles.isEmpty()) {
+                        pluginManager.getPlugins().forEach((final Plugin plugin) -> {
+                            plugin.afterScan(file, generatedFiles);
+                        });
                     }
                 }
 
@@ -154,6 +176,9 @@ public class Daemon {
         final String sleepTimeMinutesProp = properties.getProperty("sleepTimeMinutes");
         check.accept("sleepTimeMinutes");
         sleepTimeMs = 60 * 1000 * Integer.parseInt(sleepTimeMinutesProp); // m -> ms
+
+        pluginApi = new PluginApi(scanRecord);
+        pluginManager = new PluginManager(pluginApi);
     }
 
     /**
@@ -185,13 +210,15 @@ public class Daemon {
      * @param bluRayDir   the directory containing the BD
      * @param titleNumber which title to demux
      */
-    private void demuxTitle(final File bluRayDir, final int titleNumber) {
+    private Collection<File> demuxTitle(final File bluRayDir, final int titleNumber) {
         try {
             final Collection<String> generatedFilenames =
                 fileScanner.demuxBluRayTitleByLanguages(bluRayDir, titleNumber, languages);
             scanRecord.addSuccess(bluRayDir.getName(), titleNumber);
             generatedFilenames.forEach(scanRecord::addSuccess);
-            return;
+            return generatedFilenames.stream().map((final String filename) -> {
+                return new File(dirToScan + File.separator + filename);
+            }).collect(Collectors.toList());
         } catch (final CorruptBluRayStructureException cbse) {
             logger.error(String.format("was able to scan %s dir, but unable to scan title %d: %s",
                 bluRayDir.getName(), titleNumber, cbse.getDemuxerOutput()));
@@ -207,18 +234,21 @@ public class Daemon {
         if (scanRecord.containsAbandoned(bluRayDir.getName(), titleNumber)) {
             logger.error(String.format("Failed to demux %s title %d the max number of times", bluRayDir.getName(), titleNumber));
         }
+        return new HashSet<>();
     }
 
     /**
      * Demuxes a file, such as an MKV. Returns false if anything went wrong.
      * @param containerFile the file to demux
      */
-    private void demuxFile(final File containerFile) {
+    private Collection<File> demuxFile(final File containerFile) {
         try {
             final Collection<String> generatedFilenames = fileScanner.demuxFileByLanguages(containerFile, languages);
             scanRecord.addSuccess(containerFile.getName());
             generatedFilenames.forEach(scanRecord::addSuccess);
-            return;
+            return generatedFilenames.stream().map((final String filename) -> {
+                return new File(dirToScan + File.separator + filename);
+            }).collect(Collectors.toList());
         } catch (final UnreadableFileException ufe) {
             logger.warn(String.format("failed to scan %s as video container file\n\t%s", containerFile.getName(), ufe.getDemuxerOutput()));
         } catch (final FormatConversionException fce) {
@@ -234,6 +264,7 @@ public class Daemon {
         if (scanRecord.containsAbandoned(containerFile.getName(), null)) {
             logger.error(String.format("Failed to demux %s the max number of times", containerFile.getName()));
         }
+        return new HashSet<>();
     }
 
     /**
