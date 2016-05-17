@@ -2,6 +2,7 @@ package com.aaron.scannerdaemon;
 
 import com.aaron.scanner.DemuxerException;
 import com.aaron.scanner.FileScanner;
+import com.aaron.scanner.UnreadableFileException;
 import com.aaron.scanner.model.Video;
 
 import java.io.File;
@@ -28,7 +29,7 @@ public class MockEac3toScanner implements FileScanner {
     @Override
     public Set<Integer> scanBluRayDir(final File file) throws DemuxerException, IOException {
         final Set<Integer> set = new HashSet<>();
-        Collections.addAll(set, 1, 2, 3, 4);
+        Collections.addAll(set, 1, 2, 3);
         return set;
     }
 
@@ -45,9 +46,11 @@ public class MockEac3toScanner implements FileScanner {
     @Override
     public Collection<String> demuxBluRayTitleByLanguages(final File file, final int i, final Collection<String> collection) throws DemuxerException, IOException {
         final Collection<String> generatedFilenames = new HashSet<>();
-        generatedFilenames.add(file.getName() + "_ti_" + i + "_video");
-        generatedFilenames.add(file.getName() + "_ti_" + i + "_audio");
-        generatedFilenames.add(file.getName() + "_ti_" + i + "_subtitle");
+        generatedFilenames.add(file.getName() + "_ti" + i + "_tr1_Undetermined - Log.txt");
+        generatedFilenames.add(file.getName() + "_ti" + i + "_tr1_Undetermined.txt");
+        generatedFilenames.add(file.getName() + "_ti" + i + "_tr2_Undetermined.mkv");
+        generatedFilenames.add(file.getName() + "_ti" + i + "_tr3_English.dts");
+        generatedFilenames.add(file.getName() + "_ti" + i + "_tr4_English.sup");
         return generatedFilenames;
     }
 
@@ -58,10 +61,11 @@ public class MockEac3toScanner implements FileScanner {
 
     @Override
     public Collection<String> demuxFileByLanguages(final File file, final Collection<String> collection) throws DemuxerException, IOException {
+        if (!file.getName().endsWith(".mkv")) { throw new UnreadableFileException("bleh", "blah", "bluh"); }
         final Collection<String> generatedFilenames = new HashSet<>();
-        generatedFilenames.add(file.getName() + "_video");
-        generatedFilenames.add(file.getName() + "_audio");
-        generatedFilenames.add(file.getName() + "_subtitle");
+        generatedFilenames.add(file.getName().substring(0, file.getName().indexOf(".mkv")) + "_tr1_Undetermined.mkv");
+        generatedFilenames.add(file.getName().substring(0, file.getName().indexOf(".mkv")) + "_tr2_English.dts");
+        generatedFilenames.add(file.getName().substring(0, file.getName().indexOf(".mkv")) + "_tr3_English.sup");
         return generatedFilenames;
     }
 }
