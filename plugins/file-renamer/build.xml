@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="scanner-daemon" basedir="." default="create-jar">
 
-    <property name="ivy.install.version"       value="2.4.0"/>
-    <property name="ivy.jar.dir"               value="${basedir}/ivy"/>
-    <property name="ivy.jar.file"              value="${ivy.jar.dir}/ivy.jar"/>
     <property name="src.main.dir"              value="src/main/java"/>
     <property name="build.main.dir"            value="build"/>
     <property name="target.dir"                value="../../target"/>
@@ -14,8 +11,6 @@
             <include name="DemuxerDaemon.jar"/>
         </fileset>
     </path>
-
-    <available file="${ivy.jar.file}" property="ivy.installed"/>
 
     <target name="compile.main" description="compile source">
         <mkdir dir="${build.main.dir}"/>
