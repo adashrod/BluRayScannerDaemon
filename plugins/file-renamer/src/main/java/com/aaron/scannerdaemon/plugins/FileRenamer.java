@@ -13,7 +13,7 @@ import java.util.Collection;
  *       for clarity
  * - gets rid of language and track number on log file since they come from chapters file and are not relevant
  */
-public class FileRenamer implements Plugin {
+public class FileRenamer extends Plugin {
     private PluginApi pluginApi;
 
     @Override

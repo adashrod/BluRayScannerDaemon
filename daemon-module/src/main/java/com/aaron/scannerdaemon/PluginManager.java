@@ -2,11 +2,12 @@ package com.aaron.scannerdaemon;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -17,7 +18,7 @@ import java.util.jar.JarFile;
 public class PluginManager {
     private final PluginApi pluginApi;
     private final Collection<String> jarClassNames = new HashSet<>();
-    private final Collection<Plugin> plugins = new HashSet<>();
+    private final List<Plugin> plugins = new ArrayList<>();
 
     public PluginManager(final PluginApi pluginApi) {
         this.pluginApi = pluginApi;
@@ -53,7 +54,10 @@ public class PluginManager {
         return errors;
     }
 
-    public Collection<Plugin> getPlugins() { return plugins; }
+    public List<Plugin> getPlugins() {
+        plugins.sort((final Plugin o1, final Plugin o2) -> { return Integer.compare(o1.getPriority(), o2.getPriority()); });
+        return plugins;
+    }
 
     private Iterable<String> findClassNames(final JarFile jarFile) {
         final Enumeration<JarEntry> jarEntries = jarFile.entries();
@@ -79,8 +83,7 @@ public class PluginManager {
     private void instantiate(final String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         final Class potentialPluginClass;
         potentialPluginClass = Class.forName(className);
-        final Collection<Class> interfaces = Arrays.asList(potentialPluginClass.getInterfaces());
-        if (interfaces.contains(Plugin.class)) {
+        if (potentialPluginClass.getSuperclass().equals(Plugin.class)) {
             final Plugin plugin = (Plugin) potentialPluginClass.newInstance();
             for (final Plugin addedPlugin: plugins) {
                 if (addedPlugin.getClass().isAssignableFrom(potentialPluginClass)) { return; }
