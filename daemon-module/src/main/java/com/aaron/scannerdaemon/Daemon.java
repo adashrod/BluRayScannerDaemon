@@ -44,7 +44,6 @@ public class Daemon {
     private File scanRecordFile;
     private long sleepTimeMs;
     private int maxRetries;
-    private PluginApi pluginApi;
     private PluginManager pluginManager;
 
     public Daemon() {
@@ -183,8 +182,7 @@ public class Daemon {
         check.accept("sleepTimeMinutes");
         sleepTimeMs = 60 * 1000 * Integer.parseInt(sleepTimeMinutesProp); // m -> ms
 
-        pluginApi = new PluginApi(scanRecord);
-        pluginManager = new PluginManager(pluginApi);
+        pluginManager = new PluginManager(new PluginApi(scanRecord));
     }
 
     /**
