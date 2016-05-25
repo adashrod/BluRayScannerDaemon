@@ -14,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +32,10 @@ import java.util.stream.Collectors;
 public class Daemon {
     private final Logger logger = Logger.getLogger(Daemon.class);
 
+    /**
+     * The directory containing the currently running jar file
+     */
+    private final String appDir;
     private FileScanner fileScanner;
     private File dirToScan;
     private final Collection<String> languages = new HashSet<>();
@@ -43,6 +48,7 @@ public class Daemon {
     private PluginManager pluginManager;
 
     public Daemon() {
+        appDir = findAppDir();
         try {
             loadProperties();
         } catch (final FileNotFoundException fnf) {
@@ -53,7 +59,7 @@ public class Daemon {
                 System.exit(-1);
             }
             try {
-                Files.copy(sampleStream, new File("daemon.properties").toPath());
+                Files.copy(sampleStream, new File(appDir + "/daemon.properties").toPath());
             } catch (final IOException ioe) {
                 logger.fatal("failed to create daemon.properties from sample file", ioe);
                 System.exit(-1);
@@ -71,7 +77,7 @@ public class Daemon {
 
     public void start() {
         logger.info("starting daemon");
-        final File pluginsDir = new File("./plugins");
+        final File pluginsDir = new File(appDir + "/plugins");
         while (true) {
             final File[] jars = pluginsDir.listFiles((final File dir, final String name) -> { return name.endsWith(".jar"); });
             if (jars != null) {
@@ -146,7 +152,7 @@ public class Daemon {
                 throw new IllegalArgumentException(String.format("invalid %s value in properties file", propName));
             }
         };
-        properties.load(new FileReader(new File("daemon.properties")));
+        properties.load(new FileReader(new File(appDir + "/daemon.properties")));
 
         final String dirProp = properties.getProperty("dirToScan");
         check.accept("dirToScan");
@@ -289,7 +295,17 @@ public class Daemon {
         return scanRecord.containsSuccess(file.getName(), titleNumber) || scanRecord.containsAbandoned(file.getName(), titleNumber);
     }
 
-    public static void main(final String[] args) {
+    private String findAppDir() {
+        try {
+            final String jarFile = Daemon.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            return jarFile.substring(0, jarFile.lastIndexOf('/'));
+        } catch (final URISyntaxException e) {
+            logger.error("couldn't find directory of currently running app", e);
+            return ".";
+        }
+    }
+
+    public static void main(final String[] args) throws URISyntaxException {
         new Daemon().start();
     }
 }
