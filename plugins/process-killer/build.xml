@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="scanner-daemon" basedir="." default="create-jar">
+
+    <property name="src.main.dir"              value="src/main/java"/>
+    <property name="build.main.dir"            value="build"/>
+    <property name="target.dir"                value="../../target"/>
+    <property name="jar.file"                  value="ProcessKiller.jar"/>
+
+    <path id="classpath.main">
+        <fileset dir="${target.dir}">
+            <include name="DemuxerDaemon.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compile.main" description="compile source">
+        <mkdir dir="${build.main.dir}"/>
+        <javac destdir="${build.main.dir}" includeantruntime="false" classpathref="classpath.main">
+            <src path="${src.main.dir}"/>
+        </javac>
+    </target>
+
+    <target name="create-jar" depends="compile.main" description="creates a jar file in the target directory">
+        <mkdir dir="${target.dir}/plugins"/>
+        <jar destfile="${target.dir}/plugins/${jar.file}" basedir="${build.main.dir}"/>
+    </target>
+
+    <target name="clean" description="cleans all build artifacts">
+        <delete includeemptydirs="true" quiet="true">
+            <fileset dir="${build.main.dir}"/>
+            <fileset dir="${target.dir}/plugins/${jar.file}"/>
+        </delete>
+    </target>
+</project>
