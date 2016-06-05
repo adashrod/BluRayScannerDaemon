@@ -122,7 +122,11 @@ public class Daemon {
                     }
                     if (!generatedFiles.isEmpty()) {
                         pluginManager.getPlugins().forEach((final Plugin plugin) -> {
-                            plugin.afterScan(file, generatedFiles);
+                            try {
+                                plugin.afterScan(file, generatedFiles);
+                            } catch (final Exception e) {
+                                logger.warn("Failed to fire afterScan event for plugin " + plugin.getClass().getSimpleName(), e);
+                            }
                         });
                     }
                 }

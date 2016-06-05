@@ -1,5 +1,7 @@
 package com.aaron.scannerdaemon;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import java.util.jar.JarFile;
  * Responsible for loading jars at runtime to load plugins and their dependencies.
  */
 public class PluginManager {
+    private final Logger logger = Logger.getLogger(PluginManager.class);
     private final PluginApi pluginApi;
     private final Collection<String> jarClassNames = new HashSet<>();
     private final List<Plugin> plugins = new ArrayList<>();
@@ -89,7 +92,11 @@ public class PluginManager {
                 if (addedPlugin.getClass().isAssignableFrom(potentialPluginClass)) { return; }
             }
             plugins.add(plugin);
-            plugin.onLoad(pluginApi);
+            try {
+                plugin.onLoad(pluginApi);
+            } catch (final Exception e) {
+                logger.warn("Failed to fire onLoad event for plugin " + plugin.getClass().getSimpleName(), e);
+            }
         }
     }
  }
