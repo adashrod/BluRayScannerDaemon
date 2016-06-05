@@ -94,6 +94,7 @@ public class PluginManager {
             plugins.add(plugin);
             try {
                 plugin.onLoad(pluginApi);
+                logger.info("loaded plugin: " + plugin.getClass().getName());
             } catch (final Exception e) {
                 logger.warn("Failed to fire onLoad event for plugin " + plugin.getClass().getSimpleName(), e);
             }
