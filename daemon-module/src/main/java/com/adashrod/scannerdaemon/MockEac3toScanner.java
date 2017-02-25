@@ -1,9 +1,9 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
-import com.aaron.scanner.DemuxerException;
-import com.aaron.scanner.FileScanner;
-import com.aaron.scanner.UnreadableFileException;
-import com.aaron.scanner.model.Video;
+import com.adashrod.mkvscanner.DemuxerException;
+import com.adashrod.mkvscanner.FileScanner;
+import com.adashrod.mkvscanner.UnreadableFileException;
+import com.adashrod.mkvscanner.model.Video;
 
 import java.io.File;
 import java.io.IOException;

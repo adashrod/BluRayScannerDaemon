@@ -1,4 +1,4 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
 import javafx.util.Pair;
 import org.apache.log4j.Logger;

@@ -1,4 +1,4 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
 /**
  * API for plugins to interact with the main program.

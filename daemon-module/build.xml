@@ -80,7 +80,7 @@
         <mkdir dir="${target.dir}"/>
         <jar destfile="${target.dir}/${jar.file}" basedir="${build.main.dir}">
             <manifest>
-                <attribute name="Main-Class" value="com.aaron.scannerdaemon.Daemon"/>
+                <attribute name="Main-Class" value="com.adashrod.scannerdaemon.Daemon"/>
                 <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
         </jar>

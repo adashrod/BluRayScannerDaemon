@@ -1,12 +1,12 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
-import com.aaron.scanner.CorruptBluRayStructureException;
-import com.aaron.scanner.DemuxerException;
-import com.aaron.scanner.Eac3toScanner;
-import com.aaron.scanner.FileScanner;
-import com.aaron.scanner.FormatConversionException;
-import com.aaron.scanner.NotBluRayDirectoryException;
-import com.aaron.scanner.UnreadableFileException;
+import com.adashrod.mkvscanner.CorruptBluRayStructureException;
+import com.adashrod.mkvscanner.DemuxerException;
+import com.adashrod.mkvscanner.Eac3toScanner;
+import com.adashrod.mkvscanner.FileScanner;
+import com.adashrod.mkvscanner.FormatConversionException;
+import com.adashrod.mkvscanner.NotBluRayDirectoryException;
+import com.adashrod.mkvscanner.UnreadableFileException;
 import org.apache.log4j.Logger;
 
 import java.io.File;

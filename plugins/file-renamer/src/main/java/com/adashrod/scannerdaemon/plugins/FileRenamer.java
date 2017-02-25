@@ -1,7 +1,7 @@
-package com.aaron.scannerdaemon.plugins;
+package com.adashrod.scannerdaemon.plugins;
 
-import com.aaron.scannerdaemon.Plugin;
-import com.aaron.scannerdaemon.PluginApi;
+import com.adashrod.scannerdaemon.Plugin;
+import com.adashrod.scannerdaemon.PluginApi;
 
 import java.io.File;
 import java.util.Collection;

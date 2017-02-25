@@ -1,4 +1,4 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
 import org.apache.log4j.Logger;
 
@@ -28,8 +28,8 @@ public class PluginManager {
     }
 
     /**
-     * Loads the jars into the runtime, then searches for classes implementing {@link com.aaron.scannerdaemon.Plugin},
-     * instantiates each of them and calls {@link com.aaron.scannerdaemon.Plugin#onLoad(PluginApi)}
+     * Loads the jars into the runtime, then searches for classes implementing {@link com.adashrod.scannerdaemon.Plugin},
+     * instantiates each of them and calls {@link com.adashrod.scannerdaemon.Plugin#onLoad(PluginApi)}
      * @param jars Files that refer to jar files to be loaded
      * @return a map of class name to exception for any class that couldn't be instantiated for any reason
      * @throws IOException problem loading jar file
@@ -76,8 +76,8 @@ public class PluginManager {
     }
 
     /**
-     * Instantiates className iff it is a class that implements {@link com.aaron.scannerdaemon.Plugin}, adds it to the
-     * list of plugins, and calls {@link com.aaron.scannerdaemon.Plugin#onLoad(PluginApi)}
+     * Instantiates className iff it is a class that implements {@link com.adashrod.scannerdaemon.Plugin}, adds it to the
+     * list of plugins, and calls {@link com.adashrod.scannerdaemon.Plugin#onLoad(PluginApi)}
      * @param className FQ class name
      * @throws ClassNotFoundException shouldn't happen
      * @throws InstantiationException if there's anything wrong with the Plugin implementation

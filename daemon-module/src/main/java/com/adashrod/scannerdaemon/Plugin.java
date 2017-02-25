@@ -1,4 +1,4 @@
-package com.aaron.scannerdaemon;
+package com.adashrod.scannerdaemon;
 
 import java.io.File;
 import java.util.Collection;
