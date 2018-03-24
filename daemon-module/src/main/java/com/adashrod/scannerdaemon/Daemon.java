@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -77,6 +78,14 @@ public class Daemon {
     public void start() {
         logger.info("starting daemon");
         final File pluginsDir = new File(appDir + "/plugins");
+        /*
+         * this will only be used to log certain messages if scanning happened. This is to prevent the "skipping" and
+         * "scanning" messages from appearing if nothing happened
+         */
+        final Consumer<Collection<String>> flushTentativeLogs = (final Collection<String> logs) -> {
+            logs.forEach(logger::info);
+            logs.clear();
+        };
         while (true) {
             final File[] jars = pluginsDir.listFiles((final File dir, final String name) -> { return name.endsWith(".jar"); });
             if (jars != null) {
@@ -99,9 +108,13 @@ public class Daemon {
                 // only ends up staying false if all files/titles being scanned are exempt
                 boolean scannedAtLeastOneFile = false;
 
+                final Collection<String> tentativeLogs = new ArrayList<>();
                 for (final File file: files) {
                     // skip scanning the scan record file and any failed BD dir or failed/succeeded mkv file
-                    if (isExemptFile(file) || isExemptFromScan(file, null)) { continue; }
+                    if (isExemptFile(file) || isExemptFromScan(file, null)) {
+                        tentativeLogs.add(String.format("skipping %s", file.getName()));
+                        continue;
+                    }
 
                     final Collection<File> generatedFiles = new HashSet<>();
                     if (file.isDirectory()) {
@@ -110,14 +123,29 @@ public class Daemon {
                             scannedAtLeastOneFile = true;
                             continue;
                         }
+                        tentativeLogs.add(String.format("starting scan of titles %s from %s", titleNumbers, file.getName()));
                         for (final int titleNumber: titleNumbers) {
-                            if (isExemptFromScan(file, titleNumber)) { continue; }
-                            generatedFiles.addAll(demuxTitle(file, titleNumber));
+                            if (isExemptFromScan(file, titleNumber)) {
+                                tentativeLogs.add(String.format("skipping %s title %d", file.getName(), titleNumber));
+                                continue;
+                            }
+                            tentativeLogs.add(String.format("scanning title %d from %s", titleNumber, file.getName()));
+                            final Collection<File> genFilesThisTitle = demuxTitle(file, titleNumber);
+                            generatedFiles.addAll(genFilesThisTitle);
+                            flushTentativeLogs.accept(tentativeLogs);
+                            logger.info(String.format("Generated %d files from %s title %d: %s",
+                                genFilesThisTitle.size(), file.getName(), titleNumber, genFilesThisTitle));
                             scannedAtLeastOneFile = true;
                         }
 
                     } else {
+                        tentativeLogs.add(String.format("scanning %s", file.getName()));
                         generatedFiles.addAll(demuxFile(file));
+                        if (!generatedFiles.isEmpty()) {
+                            flushTentativeLogs.accept(tentativeLogs);
+                            logger.info(String.format("Generated %d files from %s: %s",
+                                generatedFiles.size(), file.getName(), generatedFiles));
+                        }
                         scannedAtLeastOneFile = true;
                     }
                     if (!generatedFiles.isEmpty()) {
@@ -133,7 +161,8 @@ public class Daemon {
 
                 if (scannedAtLeastOneFile) {
                     scanRecord.writeToFile();
-                    logger.info("finished scanning; sleeping");
+                    flushTentativeLogs.accept(tentativeLogs);
+                    logger.info(String.format("finished scanning; sleeping for %d minute(s)", sleepTimeMs / 1000 / 60));
                 }
 
                 try {
