@@ -28,6 +28,9 @@ public class JarLoader {
      */
     public static boolean addJarUrl(final URL url) {
         if (addedJars.contains(url)) { return false; }
+        // oh, no, java 9! todo
+        // Exception in thread "main" java.lang.ClassCastException: java.base/jdk.internal.loader.ClassLoaders$AppClassLoader cannot be cast to java.base/java.net.URLClassLoader
+
         final URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
         final Class<?> sysClass = URLClassLoader.class;
 
