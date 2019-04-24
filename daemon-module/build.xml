@@ -56,7 +56,7 @@
     </target>
 
     <target name="copy.libs" description="copy lib files to target dir">
-        <copy todir="${target.dir}">
+        <copy todir="${target.dir}" failonerror="false">
             <fileset dir="${lib.dir}">
                 <include name="*.jar"/>
             </fileset>
@@ -100,7 +100,7 @@
         <delete dir="${ivy.jar.dir}"/>
     </target>
 
-    <target name="clean-cache" depends="ivy.install" description="clean the ivy cache">
+    <target name="ivy.clean-cache" depends="ivy.install" description="clean the ivy cache">
         <ivy:cleancache/>
     </target>
 </project>

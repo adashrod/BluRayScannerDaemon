@@ -8,7 +8,6 @@
     </configurations>
     <dependencies defaultconf="runtime->default">
         <dependency org="log4j"                             name="log4j"                        rev="1.2.14"/>
-        <dependency org="com.fasterxml.jackson.core"        name="jackson-core"                 rev="2.7.0"/>
-        <dependency org="com.fasterxml.jackson.core"        name="jackson-databind"             rev="2.7.0"/>
+        <dependency org="com.adashrod.mkvscanner"           name="mkvscanner"                   rev="1.1.0"/>
     </dependencies>
 </ivy-module>
