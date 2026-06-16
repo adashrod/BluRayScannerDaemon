@@ -12,14 +12,8 @@ sleepTimeMinutes=360
 maxRetries=4
 ~~~~
 
-Note: this application uses [MkvScanner](https://github.com/adashrod/MkvScanner) to do the scanning and demuxing, which has not yet been published in a maven repo, and so must be compiled, and its jar added to the lib directory manually.
+`languages` is a comma-separated list of track languages to include. Each can be a language name or 3-letter ISO-639-2/T code.
 
-Build steps:
-
-1. check out and build [MkvScanner](https://github.com/adashrod/MkvScanner)
-
-2. copy the ^ jar into `BluRayScannerDaemon/daemon-module/lib`
-
-3. run `ant deploy` from `BluRayScannerDaemon/daemon-module`
+1. run `ant deploy` from `BluRayScannerDaemon/daemon-module`
 
 `BluRayScannerDaemon.jar` should now be in `BluRayScannerDaemon/target`, and can be run using `java -jar BluRayScannerDaemon.jar`

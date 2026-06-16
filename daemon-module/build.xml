@@ -27,7 +27,7 @@
     <target name="ivy.download" unless="ivy.installed" description="downloads the ivy jar file">
         <echo message="downloading ivy..."/>
         <mkdir dir="${ivy.jar.dir}"/>
-        <get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
     </target>
 
     <target name="ivy.install" depends="ivy.download" description="registers the ivy antlib in ant">
@@ -38,8 +38,12 @@
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
     </target>
 
-    <target name="ivy.resolve.main" depends="ivy.install" description="resolve ivy dependencies for running the server">
-        <ivy:retrieve pattern="${lib.dir}/[conf]/[type]/[organisation]-[artifact]-[revision].[ext]"/>
+    <target name="ivy.configure" depends="ivy.install" description="configure ivy with custom settings">
+        <ivy:configure file="${basedir}/ivysettings.xml"/>
+    </target>
+
+    <target name="ivy.resolve.main" depends="ivy.configure" description="resolve ivy dependencies for running the server">
+        <ivy:retrieve pattern="${lib.dir}/[conf]/[organisation]-[artifact]-[revision].[ext]"/>
     </target>
 
     <target name="compile.main" depends="ivy.resolve.main" description="compile source">
@@ -60,10 +64,7 @@
             <fileset dir="${lib.dir}">
                 <include name="*.jar"/>
             </fileset>
-            <fileset dir="${lib.dir}/runtime/jar">
-                <include name="*.jar"/>
-            </fileset>
-            <fileset dir="${lib.dir}/runtime/bundle">
+            <fileset dir="${lib.dir}/runtime">
                 <include name="*.jar"/>
             </fileset>
         </copy>
@@ -72,8 +73,7 @@
     <target name="create-jar" depends="compile.main, copy.resources" description="creates a jar file in the target directory">
         <pathconvert refid="classpath.main" property="manifest.classpath" pathsep=" ">
             <!--  before mapping, they will all be absolute paths -->
-            <map from="${basedir}/lib/runtime/bundle/" to=""/>
-            <map from="${basedir}/lib/runtime/jar/" to=""/>
+            <map from="${basedir}/lib/runtime/" to=""/>
             <map from="${basedir}/lib/" to=""/>
         </pathconvert>
 
