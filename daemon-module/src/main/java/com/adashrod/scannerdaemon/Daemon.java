@@ -7,6 +7,7 @@ import com.adashrod.mkvscanner.FileScanner;
 import com.adashrod.mkvscanner.FormatConversionException;
 import com.adashrod.mkvscanner.NotBluRayDirectoryException;
 import com.adashrod.mkvscanner.UnreadableFileException;
+import com.adashrod.mkvscanner.model.Iso639Language;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,7 +41,7 @@ public class Daemon {
     private final String appDir;
     private FileScanner fileScanner;
     private File dirToScan;
-    private final Collection<String> languages = new HashSet<>();
+    private final Collection<Iso639Language> languages = new HashSet<>();
     private final String scanRecordName = "scanRecord.txt";
     private ScanRecord scanRecord;
     private File scanRecordFile;
@@ -95,7 +97,7 @@ public class Daemon {
                     errors.forEach((final String className, final Throwable t) -> {
                         logger.warn(String.format("class: %s, ex: %s", className, t));
                     });
-                } catch (final IOException e) { logger.error(String.format("Failed to load plugin jar"), e); }
+                } catch (final IOException e) { logger.error("Failed to load plugin jar", e); }
             }
             final File[] files = dirToScan.listFiles();
             if (files != null) {
@@ -209,7 +211,10 @@ public class Daemon {
         final String languagesProp = properties.getProperty("languages");
         // todo: change this behavior to treat missing as "get all tracks"
         check.accept("languages");
-        Collections.addAll(languages, languagesProp.split("\\s*,\\s*"));
+        languages.addAll(Arrays.stream(languagesProp.split("\\s*,\\s*"))
+            .map(Iso639Language::fromToken)
+            .collect(Collectors.toList())
+        );
 
         final String sleepTimeMinutesProp = properties.getProperty("sleepTimeMinutes");
         check.accept("sleepTimeMinutes");
@@ -266,6 +271,8 @@ public class Daemon {
             logger.error(String.format("failed to demux BD title, arguments=%s\noutput=%s", de.getArguments(), de.getDemuxerOutput()));
         } catch (final IOException ioe) {
             logger.error(String.format("failed to demux BD title, dir=%s, title=%d: IOException: %s", bluRayDir.getName(), titleNumber, ioe.getMessage()));
+        } catch (final Exception e) {
+            logger.error(String.format("unhandled exception type %s, possible bug: %s", e.getClass().getSimpleName(), e.getMessage()));
         }
         scanRecord.addFailure(bluRayDir.getName(), titleNumber);
         if (scanRecord.containsAbandoned(bluRayDir.getName(), titleNumber)) {

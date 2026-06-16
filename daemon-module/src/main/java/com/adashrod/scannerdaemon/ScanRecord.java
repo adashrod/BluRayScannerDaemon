@@ -1,6 +1,5 @@
 package com.adashrod.scannerdaemon;
 
-import javafx.util.Pair;
 import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -11,6 +10,24 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+
+class Pair<K, V> {
+    private final K key;
+    private final V value;
+
+    public Pair(final K key, final V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    public V getValue() {
+        return value;
+    }
+
+    public K getKey() {
+        return key;
+    }
+}
 
 /**
  * A class that represents the scan record text file. Each line in the file is formatted "filename|titleNumber|attempts".
