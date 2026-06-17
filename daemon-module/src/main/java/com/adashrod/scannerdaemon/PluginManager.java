@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,7 +59,7 @@ public class PluginManager {
     }
 
     public List<Plugin> getPlugins() {
-        plugins.sort((final Plugin o1, final Plugin o2) -> { return Integer.compare(o1.getPriority(), o2.getPriority()); });
+        plugins.sort(Comparator.comparingInt(Plugin::getPriority));
         return plugins;
     }
 
@@ -69,7 +70,7 @@ public class PluginManager {
             final JarEntry jarEntry = jarEntries.nextElement();
             final String entryName = jarEntry.getName();
             if (entryName.endsWith(".class")) {
-                classNames.add(entryName.substring(0, entryName.length() - 6).replaceAll("/", "."));
+                classNames.add(entryName.substring(0, entryName.length() - 6).replace("/", "."));
             }
         }
         return classNames;
@@ -84,8 +85,9 @@ public class PluginManager {
      * @throws IllegalAccessException if the Plugin's default constructor is private
      */
     private void instantiate(final String className) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        final Class potentialPluginClass;
-        potentialPluginClass = Class.forName(className);
+        final Class<?> potentialPluginClass;
+        // specifying the class loader to ensure we get the same one that was used to load the jars
+        potentialPluginClass = Class.forName(className, true, Thread.currentThread().getContextClassLoader());
         if (potentialPluginClass.getSuperclass().equals(Plugin.class)) {
             final Plugin plugin = (Plugin) potentialPluginClass.newInstance();
             for (final Plugin addedPlugin: plugins) {
@@ -100,4 +102,4 @@ public class PluginManager {
             }
         }
     }
- }
+}

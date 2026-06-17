@@ -17,3 +17,4 @@ maxRetries=4
 1. run `ant deploy` from `BluRayScannerDaemon/daemon-module`
 
 `BluRayScannerDaemon.jar` should now be in `BluRayScannerDaemon/target`, and can be run using `java -jar BluRayScannerDaemon.jar`
+

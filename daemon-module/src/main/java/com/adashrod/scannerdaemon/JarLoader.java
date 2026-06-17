@@ -11,6 +11,7 @@ import java.util.HashSet;
 
 public class JarLoader {
     private static final Collection<URL> addedJars = new HashSet<>();
+    private static URLClassLoader pluginClassLoader;
 
     /**
      * Loads the jar into the runtime, making its classes available for use
@@ -28,25 +29,27 @@ public class JarLoader {
      */
     public static boolean addJarUrl(final URL url) {
         if (addedJars.contains(url)) { return false; }
-        // oh, no, java 9! todo
-        // Exception in thread "main" java.lang.ClassCastException: java.base/jdk.internal.loader.ClassLoaders$AppClassLoader cannot be cast to java.base/java.net.URLClassLoader
-
-        final URLClassLoader sysLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        final Class<?> sysClass = URLClassLoader.class;
 
         try {
-            final Method method = sysClass.getDeclaredMethod("addURL", URL.class);
-            method.setAccessible(true);
-            method.invoke(sysLoader, url);
+            if (pluginClassLoader == null) {
+                pluginClassLoader = new URLClassLoader(new URL[]{url}, ClassLoader.getSystemClassLoader());
+                Thread.currentThread().setContextClassLoader(pluginClassLoader);
+            } else {
+                final Method addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+                addUrlMethod.setAccessible(true);
+                addUrlMethod.invoke(pluginClassLoader, url);
+            }
             addedJars.add(url);
         } catch (final NoSuchMethodException | IllegalAccessException e) {
-            // not possible unless the name of URLClassloader#addURL changes; IllegalAccessException can't happen because of the call to setAccessible
+            e.printStackTrace();
+            return false;
         } catch (final InvocationTargetException e) {
             if (!(e.getCause() instanceof RuntimeException)) {
                 e.getCause().printStackTrace();
             } else {
                 throw (RuntimeException) e.getCause();
             }
+            return false;
         }
         return true;
     }
