@@ -11,8 +11,9 @@ import java.util.Collection;
 public abstract class Plugin {
 
     /**
-     * Implementations can define a priority value to determine what order plugins get run in. Lower values mean higher
-     * priority, e.g. priority 0 runs before priority 10. Default value if not overridden is {@link Integer#MAX_VALUE}
+     * Implementations can define a priority value to determine what order plugins get run in. This affects afterScan,
+     * not load order. Lower values mean higher priority, e.g. priority 0 runs before priority 10. Default value if not
+     * overridden is {@link Integer#MAX_VALUE}
      * @return how high of a priority the plugin should be
      */
     public int getPriority() { return Integer.MAX_VALUE; }

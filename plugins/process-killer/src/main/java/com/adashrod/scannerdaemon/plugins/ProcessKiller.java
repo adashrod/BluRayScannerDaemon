@@ -2,14 +2,26 @@ package com.adashrod.scannerdaemon.plugins;
 
 import com.adashrod.mkvscanner.util.StreamConsumer;
 import com.adashrod.mkvscanner.util.StringLineIterator;
+import com.adashrod.scannerdaemon.Daemon;
 import com.adashrod.scannerdaemon.Plugin;
 import com.adashrod.scannerdaemon.PluginApi;
 
+import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -25,6 +37,24 @@ public class ProcessKiller extends Plugin {
 
     @Override
     public void onLoad(final PluginApi pluginApi) {
+        SwingUtilities.invokeLater(() -> {
+            final JFrame notificationDialog = new JFrame("Crappy second GUI");
+            final JLabel label = new JLabel("daemon farted");
+            final JButton okButton = new JButton(new AbstractAction("fart") {
+                @Override
+                public void actionPerformed(final ActionEvent e) { notificationDialog.setVisible(false); }
+            });
+            notificationDialog.getContentPane().setLayout(new BoxLayout(notificationDialog.getContentPane(), BoxLayout.Y_AXIS));
+            final JPanel topPanel = new JPanel(), bottomPanel = new JPanel();
+            topPanel.add(label);
+            bottomPanel.add(okButton);
+            notificationDialog.add(topPanel);
+            notificationDialog.add(bottomPanel);
+
+            notificationDialog.setVisible(true);
+            notificationDialog.setPreferredSize(new Dimension(325, 100));
+            notificationDialog.pack();
+        });
         final boolean isWindows = System.getProperty("os.name").matches(".*[Ww]indows.*");
         try {
             final Integer pid = findPid(isWindows);
@@ -101,11 +131,23 @@ public class ProcessKiller extends Plugin {
     }
 
     private Integer parseLinuxProcessList(final String processList) {
+        final Pattern psPattern = Pattern.compile("\\s*(\\d+)\\s+(\\d+).*");
+        final String executableName;
+        try {
+            final String fqName = PluginApi.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            executableName = fqName.substring(fqName.lastIndexOf("/") + 1);
+        } catch (final URISyntaxException e) {
+            System.out.println("ProcessKiller failed to get executable location");
+            return null;
+        }
         for (final String line: new StringLineIterator(processList)) {
-            if (line.matches(".*java\\s+-jar.*")) {
-                final String[] parts = line.split("\\s+");
-                final int pid = new Integer(parts[0]);
-                final int elapsedS = new Integer(parts[1]);
+            if (line.matches(".*java\\s+-jar.*" + executableName + ".*")) {
+                final Matcher matcher = psPattern.matcher(line);
+                if (!matcher.matches()) {
+                    continue;
+                }
+                final int pid = Integer.parseInt(matcher.group(1));
+                final int elapsedS = Integer.parseInt(matcher.group(2));
                 if (elapsedS * 1000 > startTimeToleranceMs) { return pid; }
             }
         }

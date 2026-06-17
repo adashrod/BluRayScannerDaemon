@@ -1,8 +1,6 @@
 package com.adashrod.scannerdaemon;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -11,7 +9,7 @@ import java.util.HashSet;
 
 public class JarLoader {
     private static final Collection<URL> addedJars = new HashSet<>();
-    private static URLClassLoader pluginClassLoader;
+    private static PluginClassLoader pluginClassLoader;
 
     /**
      * Loads the jar into the runtime, making its classes available for use
@@ -30,27 +28,24 @@ public class JarLoader {
     public static boolean addJarUrl(final URL url) {
         if (addedJars.contains(url)) { return false; }
 
-        try {
-            if (pluginClassLoader == null) {
-                pluginClassLoader = new URLClassLoader(new URL[]{url}, ClassLoader.getSystemClassLoader());
-                Thread.currentThread().setContextClassLoader(pluginClassLoader);
-            } else {
-                final Method addUrlMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-                addUrlMethod.setAccessible(true);
-                addUrlMethod.invoke(pluginClassLoader, url);
-            }
-            addedJars.add(url);
-        } catch (final NoSuchMethodException | IllegalAccessException e) {
-            e.printStackTrace();
-            return false;
-        } catch (final InvocationTargetException e) {
-            if (!(e.getCause() instanceof RuntimeException)) {
-                e.getCause().printStackTrace();
-            } else {
-                throw (RuntimeException) e.getCause();
-            }
-            return false;
+        if (pluginClassLoader == null) {
+            pluginClassLoader = new PluginClassLoader(new URL[]{url}, ClassLoader.getSystemClassLoader());
+            Thread.currentThread().setContextClassLoader(pluginClassLoader);
+        } else {
+            pluginClassLoader.addURL(url);
         }
+        addedJars.add(url);
         return true;
+    }
+
+    private static class PluginClassLoader extends URLClassLoader {
+        PluginClassLoader(final URL[] urls, final ClassLoader parent) {
+            super(urls, parent);
+        }
+
+        @Override
+        public void addURL(final URL url) {
+            super.addURL(url);
+        }
     }
 }
